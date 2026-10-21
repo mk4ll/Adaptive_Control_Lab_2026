@@ -25,6 +25,11 @@ L4 = R / "lab4_adi_20261014_145549"
 L5 = R / "lab5_robust_20261014_151220"
 L6 = R / "lab6_angle_20261021_134413"          # session 2: 9 of 12 runs
 L1B = R / "lab1_identification_20261021_133847"  # session 2: re-identification of the repaired motor
+X6 = R / "extras_lab6rest_20261021_141759"       # session 2: projection/sine, long steps
+X6S = R / "extras_lab6rest_20261021_142835"      # session 2: sigma-mod toward nominal values
+XMIT = R / "extras_mitlow_20261021_143740"       # session 2: MIT maps on the repaired motor
+XDZ = R / "extras_lab5dz_20261021_144555"        # session 2: Lab I.5 deadzone with e0 = 0.06
+XMR = R / "extras_mraclong_20261021_145241"      # session 2: 10 min MRAC on the repaired motor
 
 # ---------------- fonts / styles ----------------
 F = "/usr/share/fonts/truetype/dejavu/"          # DejaVu covers all symbols used (Greek, ≈, →, −, ≤, ⁻¹)
@@ -109,14 +114,17 @@ T([["Lab", "Status", "Main result"],
     "FOPDT model + stick-slip: K ≈ 0.020 rad/s/PWM, τ = 0.128 s, Td = 0.115 s; breakaway 115–200 PWM, stop "
     "60–75 PWM; PI tracks with zero error, P cannot overcome stiction; load pot max end: −75 % speed"],
    ["I.2 MIT rule", "Done",
-    "Experimental stability condition γ·r0² < c, with c between 14.7 and 16"],
-   ["I.3 Scalar MRAC", "Done", "Stable 10 min, but linear parameter drift (no PE on a constant reference)"],
+    "Original motor: stable for γ·r0² < c, c between 14.7 and 16. Repaired motor: boundary between γ = 30 and 40, "
+    "nearly independent of r0"],
+   ["I.3 Scalar MRAC", "Done", "Stable 10 min, but linear parameter drift (no PE on a constant reference); "
+    "reproduced on the repaired motor"],
    ["I.4 Scalar ADI", "Done", "Stable; stiction blocks the slow-sine half-periods; slower drift than MRAC"],
    ["I.5 Robust MRAC/ADI", "Done",
-    "Friction-aware models halve the error (MRAC sine 9.9 → 4.6 %, ADI 29 → 6.3 %); only σ-mod stops the ADI drift"],
-   ["I.6 Angle (vector MRAC)", "Mostly done",
-    "9 of 12 runs (all 5 methods on steps, 4 on the sine): angle tracking stable, 0.27–0.49 rad RMS on steps; "
-    "σ-mod worst (leakage bias). Projection/sine and the two 5 min long steps NOT done (motor failed again)"]],
+    "Friction-aware models halve the error (MRAC sine 9.9 → 4.6 %, ADI 29 → 6.3 %); σ-mod and a deadzone wider "
+    "than the noise (e0 = 0.06) stop the drift"],
+   ["I.6 Angle (vector MRAC)", "Done (1 run cut short)",
+    "All 5 methods on steps and sine: stable, 0.20–0.49 rad RMS; σ-mod toward nominal best. 5 min hold stable "
+    "(0.002 rad). Projection hold: windup against stiction to full PWM (stopped at 51 s / 74 s)"]],
   [3.6, 1.6, 11.8])
 
 P("All numbers come from the automatically generated reports in <font name='Mono' size='8'>results/rig/</font> "
@@ -362,53 +370,95 @@ H1("9. Lab I.6: robust adaptive angle control")
 P("x = [θ, ω]; reference model θ<sub>m</sub>'' + 2ζω<sub>n</sub>θ<sub>m</sub>' + ω<sub>n</sub>²θ<sub>m</sub> = "
   "ω<sub>n</sub>²r with ω<sub>n</sub> = 1.5 rad/s, ζ = 1 (limited by ω<sub>max</sub> and the dead time); "
   "u = k1θ + k2ω + d0 + l·r plus a stiction compensation at the output equal to the measured stop threshold "
-  "(62 PWM, 21 Oct model); dθ/dt = −Γw(eᵀPB0), A<sub>m</sub>ᵀP + PA<sub>m</sub> = −I; γ = 5; estimates start at 0. "
-  "References: angle steps π → 2π → 0 → −π (5 s each) and a slow sine ±π (period 10 s). Results of 21 Oct:")
-T([["method", "steps: RMS angle error vs θm, last 25 %", "steps: e (norm.)", "sine: RMS angle error, last 25 %",
-    "sine: e (norm.)", "param drift (steps / sine)"],
-   ["none", "0.27 rad", "0.016", "0.33 rad", "0.021", "0.58 / 0.42"],
-   ["deadzone", "0.42 rad", "0.029", "0.43 rad", "0.019", "0.61 / 0.32"],
-   ["σ-modification", "0.49 rad", "0.043", "0.31 rad", "0.019", "0.57 / 0.32"],
-   ["e-modification", "0.34 rad", "0.026", "0.31 rad", "0.019", "0.62 / 0.37"],
-   ["projection", "0.33 rad", "0.028", "not run (motor failed at t = 15 s)", "–", "0.50 / –"]],
-  [3.1, 3.2, 1.9, 3.4, 1.8, 3.6], bold_first_col=True)
-B(["<b>All nine completed runs are stable</b> and rated OK: the angle follows the reference model through steps of "
-   "π and 2π, with the largest errors at the start of each step (the shaft must break away) and hold errors of "
-   "0.09–0.31 rad at the end of the steps (stiction band; the stiction compensation brings it close but the "
-   "breakaway varies from start to start).",
-   "<b>No modification</b> gives the smallest step error (0.27 rad); <b>e-mod</b> and <b>projection</b> behave almost "
-   "the same (projection is inactive: the parameters stay well inside |θi| ≤ 5).",
-   "<b>σ-modification</b> is worst on steps (0.49 rad): here the estimates start at 0 and leak toward 0, which pulls "
-   "the feedforward gain l down (l = 0.03 at the end of the sine run vs 0.40 ideal) — the same leakage bias seen in "
-   "Lab I.5.",
-   "<b>Deadzone</b> stops adaptation for |e| &lt; e0, so small residual errors are no longer corrected (0.42 rad on steps).",
-   "PE is low on both references (0.001–0.007), so the parameters do not converge to the linear-model values; "
-   "k1 and l are closest (k1 −0.32…−0.74 vs −0.40, l 0.26–0.54 vs 0.40 on steps).",
+  "(62 PWM, 21 Oct model); dθ/dt = −Γw(eᵀPB0), A<sub>m</sub>ᵀP + PA<sub>m</sub> = −I; γ = 5; estimates start at 0 "
+  "(except “σ-mod toward nominal”). References: angle steps π → 2π → 0 → −π (5 s each), a slow sine ±π "
+  "(period 10 s), and a 5 min hold at π. All runs on 21 Oct (repaired motor).")
+T([["method", "steps: RMS angle error vs θm, last 25 %", "sine: RMS angle error, last 25 %",
+    "5 min hold at π", "param drift (steps / sine)"],
+   ["none", "0.27 rad", "0.33 rad", "stable, error 0.002 rad, drift 0.04", "0.58 / 0.42"],
+   ["deadzone", "0.42 rad", "0.43 rad", "–", "0.61 / 0.32"],
+   ["σ-mod (toward 0)", "0.49 rad", "0.31 rad", "–", "0.57 / 0.32"],
+   ["σ-mod (toward nominal)", "<b>0.20 rad</b>", "0.30 rad", "–", "0.23 / 0.37"],
+   ["e-modification", "0.34 rad", "0.31 rad", "–", "0.62 / 0.37"],
+   ["projection", "0.33 rad", "0.31 rad", "windup to full PWM, aborted at 51 s and 74 s", "0.50 / 0.36"]],
+  [3.4, 3.4, 3.0, 4.6, 2.6], bold_first_col=True)
+B(["<b>All tracking runs are stable</b>: the angle follows the reference model through steps of π and 2π, with the "
+   "largest errors at the start of each step (the shaft must break away) and hold errors of 0.09–0.31 rad at the end "
+   "of the steps (stiction band).",
+   "<b>σ-modification depends on where it leaks to.</b> Starting at 0 and leaking toward 0 pulls the feedforward gain "
+   "down (l = 0.03 at the end of the sine run vs 0.40 ideal) and gives the worst step error (0.49 rad). Starting at and "
+   "leaking toward the nominal model values keeps l at 0.35–0.47 and gives the <b>best</b> step error of all methods "
+   "(0.20 rad), the same lesson as in Lab I.5.",
+   "<b>No modification, e-mod and projection</b> behave almost the same (projection is inactive: the parameters stay "
+   "well inside |θi| ≤ 5). <b>Deadzone</b> stops adaptation for |e| &lt; e0, so small residual errors are no longer "
+   "corrected (0.42 rad on steps).",
+   "<b>Long hold (“leave it running”):</b> without modification the controller reached π almost exactly and held it "
+   "for 5 min (error 0.002 rad, negligible drift): no instability. With projection the shaft stopped 0.2 rad short of "
+   "the target inside the stiction band; the adaptive law then integrated that standing error (d0 and l grew steadily) "
+   "and ramped the PWM from ≈ 115 to 255 within 10–18 s while the shaft stayed stuck. Both attempts were stopped by the "
+   "stall watchdog (at 51 s and 74 s). This is parameter windup caused by stick-slip, a drift-type instability that "
+   "projection does not prevent because the parameters stay inside its bound; a deadzone wider than the stiction band "
+   "is the matching remedy.",
+   "PE is low on both references (0.001–0.007), so the parameters do not converge to the linear-model values.",
    "Session 1 (14 Oct, original motor) gave consistent results for the three runs completed before its motor "
    "failure (0.35 / 0.43 / 0.47 rad for none-steps, none-sine, deadzone-steps)."])
-FIG(L6 / "angle_none_steps.png", "Figure 12: vector MRAC angle control on steps, no modification (21 Oct).", 12)
-FIG(L6 / "angle_sigma_steps.png", "Figure 13: same with σ-modification: leakage keeps l low, larger tracking error.", 12)
+FIG(L6 / "angle_none_steps.png", "Figure 12: vector MRAC angle control on steps, no modification.", 12)
+FIG(X6S / "angle_sigma_nominal_steps.png", "Figure 13: σ-modification leaking toward the nominal values: the best "
+    "step tracking of all methods, l stays near its ideal value.", 12)
+FIG(X6 / "angle_projection_long_step.png", "Figure 14: projection, hold at π: the shaft sticks short of the target and "
+    "the adaptive law winds the PWM up to saturation (stopped by the watchdog).", 12)
+
+H1("10. Follow-up experiments (21 Oct, repaired motor)")
+H2("Lab I.2: MIT stability map on the repaired motor")
+P("A finer sweep (γ = 40–85) and a low-γ sweep (γ = 5–30), each for r0 = 0.4–0.7, 24 s per run, same "
+  "classification as Lab I.2 (40 runs).")
+FIG(XMIT / "mit_map_combined.png", "Figure 15: MIT stability map of the repaired motor (both sweeps).", 11)
+B(["Every run with γ ≤ 30 is stable (γ·r0² up to 14.7); 19 of 20 runs with γ ≥ 40 are unstable, down to "
+   "γ·r0² = 6.4 (the one stable point, γ = 50 / r0 = 0.5, is borderline). On this motor the boundary is therefore "
+   "<b>30 &lt; γ &lt; 40, almost independent of the amplitude</b> in the tested range, rather than a constant γ·r0².",
+   "Compared with the original motor (stable up to γ·r0² = 14.7, unstable from 16): the repaired motor has a shorter "
+   "dead time, so the reference model is faster (a<sub>m</sub> = 3.7 vs 2.9 s⁻¹), and the stick-slip at small "
+   "amplitudes is different. Both shift the boundary; the classical γ·r0² scaling comes from a linearisation and holds "
+   "only approximately with this much friction.",
+   "Practical conclusion for the rig: keep γ ≤ 30 (the tracking runs used γ = 5)."])
+H2("Lab I.5: deadzone wider than the noise (e0 = 0.06)")
+T([["", "MRAC steps / sine", "MRAC long step: drift", "ADI steps / sine", "ADI long step: drift"],
+   ["e0 = 0.02 (14 Oct, 5 min step)", "4.0 % / 4.7 %", "0.081", "4.4 % / 6.9 %", "0.221"],
+   ["e0 = 0.06 (21 Oct, 2 min step)", "3.6 % / 4.8 %", "<b>0</b>", "4.0 % / 7.1 %", "<b>0.002</b>"]],
+  [4.4, 3.0, 3.2, 3.0, 3.2], bold_first_col=True)
+P("(RMS error in the last 25 %; drift = largest parameter change in the second half of the long step.) With e0 "
+  "above the velocity noise, adaptation really switches off once the error is small and the drift on the constant "
+  "step disappears, with no loss of tracking accuracy. The runs were on different motors and the long step was 2 min "
+  "instead of 5, but the drift rate dropped by two orders of magnitude.")
+H2("Lab I.3: 10 min MRAC on the repaired motor")
+T([["time", "1 min", "2 min", "5 min", "7.5 min", "10 min"],
+   ["k", "0.065", "0.050", "−0.016", "−0.077", "−0.127"],
+   ["l", "0.865", "0.904", "0.980", "1.019", "1.057"],
+   ["k + l", "0.930", "0.953", "0.964", "0.942", "0.930"]], [2.4, 2.4, 2.4, 2.4, 2.4, 2.4], bold_first_col=True)
+P("Stable tracking (1.4 % RMS error at the end) and the same linear drift as on the original motor (l +0.19 in "
+  "9 min vs +0.23 in 10 min): k and l move in opposite directions while k + l (the only identifiable combination when "
+  "y ≈ r) stays constant. The drift result of Lab I.3 is reproducible across two motors. A 30 min run was planned "
+  "but not done: at this drift rate l would only reach ≈ 1.7 after 30 min, far from any instability, so it would "
+  "show the same straight line.")
+
 H2("Hardware faults")
-P("<b>14 Oct:</b> at ≈ 16:21 (18.9 s into deadzone/sine) the encoder reading froze at a moderate command "
+P("<b>14 Oct:</b> at ≈ 16:21 (18.9 s into deadzone/sine) the motor stopped responding at a moderate command "
   "(≈ 100 PWM); the controller then saturated at +255 PWM for ≈ 12 min because the safety checks did not yet cover "
-  "this case. Diagnostics showed no encoder edges and a motor that did not turn; it was repaired. A stall/sensor-loss "
-  "watchdog (full PWM without measured motion for 2 s → motor off, lab stopped) was added. "
-  "<b>21 Oct:</b> the repaired motor failed twice more (after ≈ 3 min and ≈ 6 min of operation); both times the "
-  "watchdog stopped the motor within 3 s. The intermittent behaviour (works when started, fails after minutes) "
-  "suggests a connection or component that fails when warm or under vibration (brushes, leads, driver terminals).")
+  "this case. A stall/sensor-loss watchdog (full PWM without measured motion for 2 s → motor off, lab stopped) was "
+  "added. <b>21 Oct:</b> the repaired motor stopped responding several times, after between 15 s and ≈ 6 min of "
+  "operation, typically at moments of high current (direction reversals, or full PWM at standstill); each time it "
+  "worked again after a short pause, and the watchdog cut the power within 3 s. This pattern is consistent with the "
+  "motor driver's current-limit / over-temperature protection (or a connection that opens when warm) rather than a "
+  "permanently broken motor. The last 25 min of experiments ran without a failure.")
 
 # ======================================================================
-H1("10. Not done / to do")
-B(["<b>Fix the motor durably</b> (it currently fails after a few minutes) and verify it with several minutes of "
-   "running, not only a short test.",
-   "<b>Lab I.6, remaining 3 runs:</b> projection on the sine, and the two 5 min long constant steps "
-   "(none vs projection), which answer the drift/instability question for the angle loop. Command: "
-   "<font name='Mono' size='8'>python run.py lab6</font> (≈ 17 min; repeats all 12 runs).",
-   "Optional improvements suggested by the data: Lab I.5 deadzone width e0 ≈ 0.06 (above the noise), so the "
-   "deadzone actually stops the drift; σ-mod in Lab I.6 leaking toward nominal values instead of 0; finer MIT sweep "
-   "between γ = 30 and 100 to locate c; a longer (≥ 30 min) MRAC run to see whether the drift eventually causes "
-   "bursting.",
-   "Part II (coupled water tanks) is outside the scope of these sessions."])
+H1("11. Not done / to do")
+B(["<b>Lab I.6, projection with a 5 min hold:</b> stopped twice by the stall watchdog (windup against stiction, "
+   "Figure 14). Repeating it would end the same way; the first 51 s / 74 s already show the behaviour.",
+   "<b>30 min MRAC run:</b> not done (see Section 10); the 10 min runs on two motors are sufficient to show the drift.",
+   "Possible further work: a deadzone wider than the stiction band in the angle loop (to prevent the windup at "
+   "standstill); checking the motor driver's current/thermal protection; Part II (coupled water tanks), which is "
+   "outside the scope of these sessions."])
 
 H2("Files")
 B(["Reports, plots and CSV data: <font name='Mono' size='8'>results/rig/&lt;lab&gt;_&lt;time&gt;/</font>; identified "
