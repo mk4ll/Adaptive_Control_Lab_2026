@@ -43,16 +43,27 @@ def main(rig, sim, args):
         return
 
     rep.h2("2. Stability map: gamma x reference amplitude")
+    stability_map(rig, rep, d, config.MIT_GAMMA_SWEEP, config.MIT_AMP_SWEEP)
+    rep.save()
+
+
+def stability_map(rig, rep, d, gammas, amps_sweep):
+    """Run the MIT rule for every (gamma, r0), classify stable / unstable / stuck, write table + map."""
     T = 24.0
     results = []
-    for gamma in config.MIT_GAMMA_SWEEP:
-        for amp in config.MIT_AMP_SWEEP:
+    for gamma in gammas:
+        for amp in amps_sweep:
             rest(rig)
             ctrl = MITController(d.am, d.bm, gamma, d.ys)
             ctrl.param_limit = config.MIT_MAP_PARAM_LIMIT     # stop early once it clearly diverges
             name = f"mit_map_g{gamma:g}_r{amp:g}"
             log = run_experiment(rig, ctrl, signals.square(amp * d.ys, 8.0), T, name)
             rep.save_log(log)
+            if "no measured motion" in log.status:      # hardware fault, not an instability of the MIT rule
+                rep.table(["gamma", "r0 (norm)", "gamma*r0^2", "RMS e last 25%", "verdict", "status"], results)
+                rep.text(f"\n**MAP STOPPED - hardware fault:** {name}: {log.status}.")
+                rep.save()
+                raise RuntimeError(f"{name}: {log.status}. Stopping - fix the hardware and re-run.")
             m = tracking_metrics(log)
             # unstable = aborted, error growing over the run, or error as large as the reference itself
             e = log["e_n"]
@@ -85,14 +96,14 @@ def main(rig, sim, args):
             continue
         ok = r[4] == "stable"
         ax.plot(r[1], r[0], "o" if ok else "X", ms=10, color=COLORS[2] if ok else COLORS[1])
-    amps = np.linspace(min(config.MIT_AMP_SWEEP), max(config.MIT_AMP_SWEEP), 50)
+    amps = np.linspace(min(amps_sweep), max(amps_sweep), 50)
     if stab and unst and max(stab) < min(unst):
         c = np.sqrt(max(stab) * min(unst))        # boundary estimate between the two groups
         ax.plot(amps, c / amps**2, color="#8a8a85", ls="--", lw=1.2, label=f"gamma*r0^2 = {c:.3g}")
     ax.plot([], [], "o", color=COLORS[2], label="stable"), ax.plot([], [], "X", color=COLORS[1], label="unstable")
     ax.plot([], [], "s", color="#8a8a85", label="stuck (stiction)")
     ax.legend()
-    ax.set_yscale("log"), ax.set_xlabel("reference amplitude r0 (normalised)"), ax.set_ylabel("gamma")
+    ax.set_yscale("log"), ax.set_xticks(sorted(set(amps_sweep))), ax.set_xlabel("reference amplitude r0 (normalised)"), ax.set_ylabel("gamma")
     ax.set_title("MIT rule stability map")
     rep.figure(fig, "mit_stability_map")
-    rep.save()
+    return results

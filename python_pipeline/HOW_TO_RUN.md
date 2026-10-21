@@ -77,6 +77,7 @@ verdicts), one CSV per experiment and the plots.
 | `python run.py lab5` | Lab I.5 robust MRAC and ADI × {none, deadzone, σ-mod, e-mod, projection} × {steps, sine, 5 min step} | model.json | 65 min |
 | `python run.py lab6` | Lab I.6 angle control (vector MRAC) × 5 robust methods × {steps, sine} + 2 long steps | model.json, encoder | 17 min |
 | `python run.py all` | check + lab1 … lab6 back to back (no load test) | | ~2 h |
+| `python run.py extras --part <p>` | Follow-up experiments: `lab6rest` (missing Lab I.6 runs + σ-mod toward nominal), `mitfine` / `mitlow` (MIT maps at γ = 40–85 / 5–30), `lab5dz` (Lab I.5 deadzone with e0 = 0.06), `mraclong` (long MRAC run), `all` | model.json | 1–30 min per part |
 
 ### Options
 | Option | Effect |
@@ -87,6 +88,8 @@ verdicts), one CSV per experiment and the plots.
 | `--disturbance PWM` | Adds a bounded random input disturbance (labs 3–6), which makes parameter drift show up faster |
 | `--skip-load` | lab1: skip the interactive load-potentiometer part (use the `load` command instead) |
 | `--position NAME` | load: name of the potentiometer position, e.g. `minimum`, `middle`, `maximum` |
+| `--skip a,b` | extras `lab6rest`: run names already measured (they are not repeated) |
+| `--mrac-long SECONDS` | extras `mraclong`: duration (default 1800 s) |
 
 ### Load test workflow (needs someone at the bench)
 ```bash
@@ -160,9 +163,10 @@ It reads the result folders listed at the top of `tools/build_report.py`. Update
 ---
 
 ## 8. Status (2026-10-21)
-- Labs I.1–I.5: done on the real rig (14 Oct).
-- Lab I.6: 9 of 12 runs done (21 Oct, repaired motor, re-identified model in `results/rig/model.json`;
-  the 14 Oct model is kept as `results/rig/model_2026-10-14.json`). Missing: projection on the sine and the two
-  5 min long steps, because the repaired motor failed again after a few minutes.
-- Runs invalidated by motor failures are listed in `NOTE_INVALID_RUNS.md` inside the affected result folders.
-- **Next:** fix the motor durably (check it runs for several minutes), then `python run.py check` and `python run.py lab6`.
+- Labs I.1–I.6 done (I.1–I.5 on 14 Oct, I.6 and follow-up experiments on 21 Oct with the repaired motor).
+  Everything is summarised in the PDF report.
+- The only run not completed is the Lab I.6 projection hold (5 min). It ends in windup against stiction and is
+  stopped by the stall watchdog every time; this is itself the result (see the report, Figure 14).
+- Runs invalidated by motor stops are listed in `NOTE_INVALID_RUNS.md` inside the affected result folders.
+- The motor (or its driver) stops responding after a few minutes of high current, typically at reversals or
+  at full PWM at standstill, and recovers after a short pause. If `check` fails, wait a minute and try again.
