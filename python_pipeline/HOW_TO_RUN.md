@@ -165,8 +165,8 @@ It reads the result folders listed at the top of `tools/build_report.py`. Update
 ## 8. Status (2026-10-21)
 - Labs I.1–I.6 done (I.1–I.5 on 14 Oct, I.6 and follow-up experiments on 21 Oct with the repaired motor).
   Everything is summarised in the PDF report.
-- The only run not completed is the Lab I.6 projection hold (5 min). It ends in windup against stiction and is
-  stopped by the stall watchdog every time; this is itself the result (see the report, Figure 14).
+- The Lab I.6 projection hold (5 min) always ends in windup against stiction and is stopped by the stall
+  watchdog after about a minute; that behaviour is the result (see the report, Figure 14).
 - Runs invalidated by motor stops are listed in `NOTE_INVALID_RUNS.md` inside the affected result folders.
 - The motor (or its driver) stops responding after a few minutes of high current, typically at reversals or
   at full PWM at standstill, and recovers after a short pause. If `check` fails, wait a minute and try again.

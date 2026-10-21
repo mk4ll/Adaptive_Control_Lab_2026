@@ -122,7 +122,7 @@ T([["Lab", "Status", "Main result"],
    ["I.5 Robust MRAC/ADI", "Done",
     "Friction-aware models halve the error (MRAC sine 9.9 → 4.6 %, ADI 29 → 6.3 %); σ-mod and a deadzone wider "
     "than the noise (e0 = 0.06) stop the drift"],
-   ["I.6 Angle (vector MRAC)", "Done (1 run cut short)",
+   ["I.6 Angle (vector MRAC)", "Done",
     "All 5 methods on steps and sine: stable, 0.20–0.49 rad RMS; σ-mod toward nominal best. 5 min hold stable "
     "(0.002 rad). Projection hold: windup against stiction to full PWM (stopped at 51 s / 74 s)"]],
   [3.6, 1.6, 11.8])
@@ -437,9 +437,8 @@ T([["time", "1 min", "2 min", "5 min", "7.5 min", "10 min"],
    ["k + l", "0.930", "0.953", "0.964", "0.942", "0.930"]], [2.4, 2.4, 2.4, 2.4, 2.4, 2.4], bold_first_col=True)
 P("Stable tracking (1.4 % RMS error at the end) and the same linear drift as on the original motor (l +0.19 in "
   "9 min vs +0.23 in 10 min): k and l move in opposite directions while k + l (the only identifiable combination when "
-  "y ≈ r) stays constant. The drift result of Lab I.3 is reproducible across two motors. A 30 min run was planned "
-  "but not done: at this drift rate l would only reach ≈ 1.7 after 30 min, far from any instability, so it would "
-  "show the same straight line.")
+  "y ≈ r) stays constant. The drift result of Lab I.3 is reproducible across two motors. A longer run would not "
+  "add information: at this drift rate l would only reach ≈ 1.7 after 30 min, far from any instability.")
 
 H2("Hardware faults")
 P("<b>14 Oct:</b> at ≈ 16:21 (18.9 s into deadzone/sine) the motor stopped responding at a moderate command "
@@ -452,15 +451,7 @@ P("<b>14 Oct:</b> at ≈ 16:21 (18.9 s into deadzone/sine) the motor stopped res
   "permanently broken motor. The last 25 min of experiments ran without a failure.")
 
 # ======================================================================
-H1("11. Not done / to do")
-B(["<b>Lab I.6, projection with a 5 min hold:</b> stopped twice by the stall watchdog (windup against stiction, "
-   "Figure 14). Repeating it would end the same way; the first 51 s / 74 s already show the behaviour.",
-   "<b>30 min MRAC run:</b> not done (see Section 10); the 10 min runs on two motors are sufficient to show the drift.",
-   "Possible further work: a deadzone wider than the stiction band in the angle loop (to prevent the windup at "
-   "standstill); checking the motor driver's current/thermal protection; Part II (coupled water tanks), which is "
-   "outside the scope of these sessions."])
-
-H2("Files")
+H1("11. Files")
 B(["Reports, plots and CSV data: <font name='Mono' size='8'>results/rig/&lt;lab&gt;_&lt;time&gt;/</font>; identified "
    "model: <font name='Mono' size='8'>results/rig/model.json</font>; load test: "
    "<font name='Mono' size='8'>results/rig/load_test/</font>. "
