@@ -6,7 +6,7 @@ stops the motor between them, and writes a report (`summary.md`) with tables, pl
 Your job is to read the report and judge whether the results make sense.
 
 **Step-by-step instructions for every script: [HOW_TO_RUN.md](HOW_TO_RUN.md).**
-**Results of the first session (2026-10-14): [Lab_Report_PartI_DC_Motors_2026-10-14.pdf](Lab_Report_PartI_DC_Motors_2026-10-14.pdf)** and `results/rig/`.
+**Results (sessions 2026-10-14 and 2026-10-21): [Lab_Report_PartI_DC_Motors.pdf](Lab_Report_PartI_DC_Motors.pdf)** and `results/rig/`.
 
 ```
  Arduino (motor_io.ino)                 PC (Python)
