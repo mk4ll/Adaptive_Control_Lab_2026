@@ -55,10 +55,12 @@ def run_adaptive(rig, rep, controller, reference, duration, name, ideal=None, di
     """Run one adaptive experiment from rest, save CSV + plot, return its summary-table row."""
     rest(rig)
     log = run_experiment(rig, controller, reference, duration, name, disturbance)
-    if "no measured motion" in log.status:
-        raise RuntimeError(f"{name}: {log.status}. Stopping the lab - fix the hardware and re-run.")
     rep.save_log(log)
     rep.figure(plot_tracking(log, name, ideal, y_key, y_label), name)
+    if "no measured motion" in log.status:
+        rep.text(f"\n**LAB STOPPED - hardware fault:** {name}: {log.status}. Runs after this one were not done.")
+        rep.save()                       # keep the report of everything measured so far
+        raise RuntimeError(f"{name}: {log.status}. Stopping the lab - fix the hardware and re-run.")
     return adaptive_summary_row(log, ideal), log
 
 

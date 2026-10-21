@@ -15,7 +15,7 @@ from reportlab.lib.fonts import addMapping
 
 ROOT = Path(__file__).resolve().parent.parent
 R = ROOT / "results" / "rig"
-OUT = ROOT / "Lab_Report_PartI_DC_Motors_2026-10-14.pdf"
+OUT = ROOT / "Lab_Report_PartI_DC_Motors.pdf"
 
 L1 = R / "lab1_identification_20261014_142130"
 LT = R / "load_test"
@@ -23,7 +23,8 @@ L2 = R / "lab2_mit_20261014_143203"
 L3 = R / "lab3_mrac_20261014_144115"
 L4 = R / "lab4_adi_20261014_145549"
 L5 = R / "lab5_robust_20261014_151220"
-L6 = R / "lab6_angle_20261014_161617"
+L6 = R / "lab6_angle_20261021_134413"          # session 2: 9 of 12 runs
+L1B = R / "lab1_identification_20261021_133847"  # session 2: re-identification of the repaired motor
 
 # ---------------- fonts / styles ----------------
 F = "/usr/share/fonts/truetype/dejavu/"          # DejaVu covers all symbols used (Greek, ≈, →, −, ≤, ⁻¹)
@@ -89,7 +90,7 @@ def page_decor(canvas, doc):
     canvas.saveState()
     canvas.setFont("Noto", 7.5)
     canvas.setFillColor(MUTED)
-    canvas.drawString(2 * cm, 1.2 * cm, "Adaptive Control Lab, Part I: coupled DC motors | 2026-10-14")
+    canvas.drawString(2 * cm, 1.2 * cm, "Adaptive Control Lab, Part I: coupled DC motors | sessions 2026-10-14 and 2026-10-21")
     canvas.drawRightString(A4[0] - 2 * cm, 1.2 * cm, f"page {doc.page}")
     canvas.restoreState()
 
@@ -99,7 +100,7 @@ story.append(Spacer(1, 2.5 * cm))
 P("Adaptive Control Laboratory, Part I", title)
 P("Coupled DC motors: identification, MIT rule, MRAC, ADI, robust and angle control", subtitle)
 story.append(Spacer(1, 0.4 * cm))
-P("Experimental report, session of 14 October 2026 (incomplete: motor failure during Lab I.6)", subtitle)
+P("Experimental report, sessions of 14 and 21 October 2026", subtitle)
 story.append(Spacer(1, 1.2 * cm))
 
 H2("Status at a glance")
@@ -113,9 +114,9 @@ T([["Lab", "Status", "Main result"],
    ["I.4 Scalar ADI", "Done", "Stable; stiction blocks the slow-sine half-periods; slower drift than MRAC"],
    ["I.5 Robust MRAC/ADI", "Done",
     "Friction-aware models halve the error (MRAC sine 9.9 → 4.6 %, ADI 29 → 6.3 %); only σ-mod stops the ADI drift"],
-   ["I.6 Angle (vector MRAC)", "Partial",
-    "3 of 12 runs valid (angle tracking works, ~0.35 rad RMS); motor failed during run 4. Robust comparison and "
-    "long runs NOT done"]],
+   ["I.6 Angle (vector MRAC)", "Mostly done",
+    "9 of 12 runs (all 5 methods on steps, 4 on the sine): angle tracking stable, 0.27–0.49 rad RMS on steps; "
+    "σ-mod worst (leakage bias). Projection/sine and the two 5 min long steps NOT done (motor failed again)"]],
   [3.6, 1.6, 11.8])
 
 P("All numbers come from the automatically generated reports in <font name='Mono' size='8'>results/rig/</font> "
@@ -168,7 +169,7 @@ for sub in t._cellvalues[0]:
 story.append(t)
 P("Steps of |u| ≤ 100 PWM (up to 100 for u &lt; 0) did not break the static friction: ω_ss = 0.", small)
 
-m = json.loads((R / "model.json").read_text())
+m = json.loads((R / "model_2026-10-14.json").read_text())   # session-1 model (model.json is the latest)
 H2("Identified parameters")
 T([["", "u > 0", "u < 0", "used for design"],
    ["gain K (kinetic line, slow ramp) [rad/s/PWM]", f"{m['K_pos']:.4f}", f"{m['K_neg']:.4f}",
@@ -340,41 +341,74 @@ FIG(L5 / "mrac_long_comparison.png", "Figure 10: MRAC, 5 min constant step: para
 FIG(L5 / "adi_long_comparison.png", "Figure 11: ADI, 5 min constant step: drift for all methods except σ-mod.", 14)
 
 # ======================================================================
-H1("8. Lab I.6: robust adaptive angle control (partial)")
+H1("8. Session 2 (21 Oct): re-identification of the repaired motor")
+P("The motor was repaired between the sessions. Before Lab I.6 the identification of Lab I.1 was repeated "
+  "(steps and slow triangle), because Lab I.6 uses the model for its reference model and stiction compensation.")
+m2 = json.loads((R / "model.json").read_text())
+T([["", "14 Oct (original motor)", "21 Oct (repaired motor)"],
+   ["gain K (avg) [rad/s/PWM]", f"{0.5 * (m['K_pos'] + m['K_neg']):.4f}", f"{0.5 * (m2['K_pos'] + m2['K_neg']):.4f}"],
+   ["time constant τ (avg) [s]", f"{0.5 * (m['tau_pos'] + m['tau_neg']):.3f}", f"{0.5 * (m2['tau_pos'] + m2['tau_neg']):.3f}"],
+   ["dead time Td [s]", f"{m['Td']:.3f}", f"{m2['Td']:.3f}"],
+   ["breakaway ub (+ / −) [PWM]", f"{m['ub_pos']:.0f} / {m['ub_neg']:.0f}", f"{m2['ub_pos']:.1f} / {m2['ub_neg']:.1f}"],
+   ["stop threshold us (+ / −) [PWM]", f"{m['us_pos']:.0f} / {m['us_neg']:.0f}", f"{m2['us_pos']:.0f} / {m2['us_neg']:.0f}"],
+   ["ω_max [rad/s]", "4.74", "4.55"],
+   ["validation fit while moving (slow sine)", "85.1 %", "85.1 %"]], [6.0, 5.0, 5.0], bold_first_col=True)
+P("The repaired motor is very close to the original (gain −7 %, τ +4 %, slightly lower stiction). The repair did "
+  "not hold reliably: the motor stopped responding after ≈ 3 min of operation (validation ramp, P/PI runs of this "
+  "identification are invalid, see NOTE_INVALID_RUNS.md), was fixed again, and failed once more after ≈ 6 min "
+  "during Lab I.6. The stall watchdog cut the power within 2–3 s each time.")
+
+H1("9. Lab I.6: robust adaptive angle control")
 P("x = [θ, ω]; reference model θ<sub>m</sub>'' + 2ζω<sub>n</sub>θ<sub>m</sub>' + ω<sub>n</sub>²θ<sub>m</sub> = "
   "ω<sub>n</sub>²r with ω<sub>n</sub> = 1.5 rad/s, ζ = 1 (limited by ω<sub>max</sub> and the dead time); "
-  "u = k1θ + k2ω + d0 + l·r plus a stiction compensation of 67 PWM at the output; "
-  "dθ/dt = −Γw(eᵀPB0), A<sub>m</sub>ᵀP + PA<sub>m</sub> = −I; γ = 5.")
-T([["run", "status", "RMS angle error vs θm, last 25 %", "final angle error"],
-   ["no modification, steps (±π, 2π)", "valid", "0.35 rad", "0.23 rad"],
-   ["no modification, slow sine (±π)", "valid", "0.43 rad", "(moving reference)"],
-   ["deadzone, steps", "valid", "0.47 rad", "0.02 rad"],
-   ["deadzone, sine", "fault at t = 18.9 s", "–", "–"],
-   ["σ-mod, e-mod, projection (steps, sine); 2 long steps", "INVALID (motor failed)", "–", "–"]],
-  [6.4, 3.4, 4.4, 2.8])
-P("The valid runs show that the angle controller works on this rig: the angle follows the reference model through "
-  "steps of π and 2π, with errors mainly at the start of each step (stiction) and small hold errors (Figure 12).")
-FIG(L6 / "angle_none_steps.png", "Figure 12: vector MRAC angle control on steps (valid run).", 11)
-H2("Hardware fault")
-P("At ≈ 16:21, 18.9 s into the deadzone/sine run, the encoder reading froze while the controller command was "
-  "moderate (≈ 100 PWM); the controller then saturated at +255 PWM for the remaining ≈ 12 min, because the safety "
-  "checks did not yet cover this case (a stall/sensor-loss watchdog was added afterwards). A full-PWM test and an "
-  "encoder diagnostic sketch afterwards measured zero encoder edges on both channels in both directions; on "
-  "inspection the gears move but the motor does not, so the motor is most likely broken. The failure occurred at a "
-  "moderate command; whether the following 12 min at full PWM contributed to the damage cannot be determined.")
+  "u = k1θ + k2ω + d0 + l·r plus a stiction compensation at the output equal to the measured stop threshold "
+  "(62 PWM, 21 Oct model); dθ/dt = −Γw(eᵀPB0), A<sub>m</sub>ᵀP + PA<sub>m</sub> = −I; γ = 5; estimates start at 0. "
+  "References: angle steps π → 2π → 0 → −π (5 s each) and a slow sine ±π (period 10 s). Results of 21 Oct:")
+T([["method", "steps: RMS angle error vs θm, last 25 %", "steps: e (norm.)", "sine: RMS angle error, last 25 %",
+    "sine: e (norm.)", "param drift (steps / sine)"],
+   ["none", "0.27 rad", "0.016", "0.33 rad", "0.021", "0.58 / 0.42"],
+   ["deadzone", "0.42 rad", "0.029", "0.43 rad", "0.019", "0.61 / 0.32"],
+   ["σ-modification", "0.49 rad", "0.043", "0.31 rad", "0.019", "0.57 / 0.32"],
+   ["e-modification", "0.34 rad", "0.026", "0.31 rad", "0.019", "0.62 / 0.37"],
+   ["projection", "0.33 rad", "0.028", "not run (motor failed at t = 15 s)", "–", "0.50 / –"]],
+  [3.1, 3.2, 1.9, 3.4, 1.8, 3.6], bold_first_col=True)
+B(["<b>All nine completed runs are stable</b> and rated OK: the angle follows the reference model through steps of "
+   "π and 2π, with the largest errors at the start of each step (the shaft must break away) and hold errors of "
+   "0.09–0.31 rad at the end of the steps (stiction band; the stiction compensation brings it close but the "
+   "breakaway varies from start to start).",
+   "<b>No modification</b> gives the smallest step error (0.27 rad); <b>e-mod</b> and <b>projection</b> behave almost "
+   "the same (projection is inactive: the parameters stay well inside |θi| ≤ 5).",
+   "<b>σ-modification</b> is worst on steps (0.49 rad): here the estimates start at 0 and leak toward 0, which pulls "
+   "the feedforward gain l down (l = 0.03 at the end of the sine run vs 0.40 ideal) — the same leakage bias seen in "
+   "Lab I.5.",
+   "<b>Deadzone</b> stops adaptation for |e| &lt; e0, so small residual errors are no longer corrected (0.42 rad on steps).",
+   "PE is low on both references (0.001–0.007), so the parameters do not converge to the linear-model values; "
+   "k1 and l are closest (k1 −0.32…−0.74 vs −0.40, l 0.26–0.54 vs 0.40 on steps).",
+   "Session 1 (14 Oct, original motor) gave consistent results for the three runs completed before its motor "
+   "failure (0.35 / 0.43 / 0.47 rad for none-steps, none-sine, deadzone-steps)."])
+FIG(L6 / "angle_none_steps.png", "Figure 12: vector MRAC angle control on steps, no modification (21 Oct).", 12)
+FIG(L6 / "angle_sigma_steps.png", "Figure 13: same with σ-modification: leakage keeps l low, larger tracking error.", 12)
+H2("Hardware faults")
+P("<b>14 Oct:</b> at ≈ 16:21 (18.9 s into deadzone/sine) the encoder reading froze at a moderate command "
+  "(≈ 100 PWM); the controller then saturated at +255 PWM for ≈ 12 min because the safety checks did not yet cover "
+  "this case. Diagnostics showed no encoder edges and a motor that did not turn; it was repaired. A stall/sensor-loss "
+  "watchdog (full PWM without measured motion for 2 s → motor off, lab stopped) was added. "
+  "<b>21 Oct:</b> the repaired motor failed twice more (after ≈ 3 min and ≈ 6 min of operation); both times the "
+  "watchdog stopped the motor within 3 s. The intermittent behaviour (works when started, fails after minutes) "
+  "suggests a connection or component that fails when warm or under vibration (brushes, leads, driver terminals).")
 
 # ======================================================================
-H1("9. Not done / to do next session")
-B(["<b>Repair or replace the motor</b>, then run <font name='Mono' size='8'>python run.py check</font>.",
-   "<b>Re-run Lab I.6 completely</b> (≈ 17 min): all five robust methods on steps and sine, and the two 5 min "
-   "long steps (none vs projection) for the drift/instability question. Because a new motor may differ, re-run "
-   "the Lab I.1 identification first (≈ 5 min) so the model and the stiction compensation match.",
-   "If a new motor is fitted, Labs I.2–I.5 results describe the old motor; repeating at least I.3 would show "
-   "whether the conclusions carry over.",
+H1("10. Not done / to do")
+B(["<b>Fix the motor durably</b> (it currently fails after a few minutes) and verify it with several minutes of "
+   "running, not only a short test.",
+   "<b>Lab I.6, remaining 3 runs:</b> projection on the sine, and the two 5 min long constant steps "
+   "(none vs projection), which answer the drift/instability question for the angle loop. Command: "
+   "<font name='Mono' size='8'>python run.py lab6</font> (≈ 17 min; repeats all 12 runs).",
    "Optional improvements suggested by the data: Lab I.5 deadzone width e0 ≈ 0.06 (above the noise), so the "
-   "deadzone actually stops the drift; finer MIT sweep between γ = 30 and 100 to locate c; a longer (≥ 30 min) MRAC "
-   "run to see whether the drift eventually causes bursting.",
-   "Part II (coupled water tanks) is outside the scope of this session."])
+   "deadzone actually stops the drift; σ-mod in Lab I.6 leaking toward nominal values instead of 0; finer MIT sweep "
+   "between γ = 30 and 100 to locate c; a longer (≥ 30 min) MRAC run to see whether the drift eventually causes "
+   "bursting.",
+   "Part II (coupled water tanks) is outside the scope of these sessions."])
 
 H2("Files")
 B(["Reports, plots and CSV data: <font name='Mono' size='8'>results/rig/&lt;lab&gt;_&lt;time&gt;/</font>; identified "
@@ -385,7 +419,7 @@ B(["Reports, plots and CSV data: <font name='Mono' size='8'>results/rig/&lt;lab&
    "all settings in <font name='Mono' size='8'>lab/config.py</font>."])
 
 doc = SimpleDocTemplate(str(OUT), pagesize=A4, leftMargin=2 * cm, rightMargin=2 * cm, topMargin=1.8 * cm,
-                        bottomMargin=2 * cm, title="Adaptive Control Lab Part I: Report 2026-10-14",
+                        bottomMargin=2 * cm, title="Adaptive Control Lab Part I: Report",
                         author="Adaptive Control Lab")
 doc.build(story, onFirstPage=page_decor, onLaterPages=page_decor)
 print(OUT)

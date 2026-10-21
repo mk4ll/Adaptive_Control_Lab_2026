@@ -1,8 +1,8 @@
 # How to run everything
 
 This guide covers every script in this folder: what it does, how to start it, how long it takes, and where its
-results go. Background and theory are in [README.md](README.md). The report from the first session is
-[Lab_Report_PartI_DC_Motors_2026-10-14.pdf](Lab_Report_PartI_DC_Motors_2026-10-14.pdf).
+results go. Background and theory are in [README.md](README.md). The report of both sessions is
+[Lab_Report_PartI_DC_Motors.pdf](Lab_Report_PartI_DC_Motors.pdf).
 
 ---
 
@@ -21,7 +21,7 @@ results go. Background and theory are in [README.md](README.md). The report from
 | `experiments/*.py` | One file per lab, called by `run.py` |
 | `firmware/motor_io/motor_io.ino` | Arduino sketch (thin I/O layer, flash once) |
 | `tools/build_report.py` | Rebuilds the PDF report from the results |
-| `results/rig/` | All hardware results from 2026-10-14 (one folder per run) |
+| `results/rig/` | All hardware results from 2026-10-14 and 2026-10-21 (one folder per run) |
 
 ---
 
@@ -159,8 +159,10 @@ It reads the result folders listed at the top of `tools/build_report.py`. Update
 
 ---
 
-## 8. Status (2026-10-14)
-- Labs I.1–I.5: done on the real rig (see the PDF report).
-- Lab I.6: only 3 of 12 runs valid. The motor failed during the session (see
-  `results/rig/lab6_angle_20261014_161617/NOTE_INVALID_RUNS.md`).
-- **Next session:** repair or replace the motor, run `check`, re-run `lab1 --skip-load`, then `lab6`.
+## 8. Status (2026-10-21)
+- Labs I.1–I.5: done on the real rig (14 Oct).
+- Lab I.6: 9 of 12 runs done (21 Oct, repaired motor, re-identified model in `results/rig/model.json`;
+  the 14 Oct model is kept as `results/rig/model_2026-10-14.json`). Missing: projection on the sine and the two
+  5 min long steps, because the repaired motor failed again after a few minutes.
+- Runs invalidated by motor failures are listed in `NOTE_INVALID_RUNS.md` inside the affected result folders.
+- **Next:** fix the motor durably (check it runs for several minutes), then `python run.py check` and `python run.py lab6`.
